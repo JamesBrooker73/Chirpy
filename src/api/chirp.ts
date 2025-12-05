@@ -1,5 +1,6 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { respondWithError, respondWithJSON } from "./json.js";
+import { BadRequestError } from "./error.js";
 
 export async function handlerValidateChirp(req: Request, res: Response): Promise<void> {
   type parameters = {
@@ -10,8 +11,19 @@ export async function handlerValidateChirp(req: Request, res: Response): Promise
   const maxChirpLength = 140;
 
   if (params.body.length > maxChirpLength) {
-     respondWithError(res, 400, "Chirp is too long");
-     return;
+    throw new BadRequestError("Chirp is too long. Max length is 140");
   }
-  respondWithJSON(res, 200, {valid: true, });
+
+  const wordArray = params.body.trim().split(" ");
+  const bannedWords = ["kerfuffle", "sharbert", "fornax"];
+  const filteredWords = [];
+  for (const word of wordArray) {
+    if (bannedWords.includes(word.toLowerCase())) {
+      filteredWords.push("****");
+      continue;
+    }
+    filteredWords.push(word);
+  }
+  const cleanString = filteredWords.join(" ");
+  respondWithJSON(res, 200, {cleanedBody: cleanString, });
 }
