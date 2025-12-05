@@ -1,7 +1,15 @@
 import type { Request, Response } from "express";
-import { apiConfig } from "../config.js";
+import { config } from "../config.js";
+import { ForbiddenError } from "../api/error.js";
+import { deleteUsers } from "../db/queries/users.js";
+import { respondWithJSON } from "../api/json.js";
 
 export async function handlerResetFileServerHits(_: Request, res: Response): Promise<void> {
-  apiConfig.fileServerHits = 0;
-  res.status(200).send("Hits reset to 0");
+  if (config.api.platform !== "dev") {
+    throw new ForbiddenError("Forbidden access");
+  }
+  config.api.fileServerHits = 0;
+  await deleteUsers();
+  res.write("Hits reset to 0 and users deleted");
+  res.end();
 }
