@@ -1,27 +1,22 @@
 import type { NextFunction, Request, Response } from "express";
 import { respondWithError, respondWithJSON } from "./json.js";
-import { BadRequestError, NotFoundError } from "./error.js";
+import { BadRequestError, NotFoundError, UnauthorizedError } from "./error.js";
 import { createChirp, getAllChirps, getChirpByID } from "../db/queries/chirps.js";
 import { validateUser } from "../db/queries/users.js";
+import { getBearerToken, validateJWT } from "../auth.js";
+import { config } from "../config.js";
 
 export async function handlerCreateChirp(req: Request, res: Response): Promise<void> {
   type Parameters = {
       body: string;
-      userId: string;
     };
   
   const params: Parameters = req.body;
-  
-  if (
-    typeof params.userId !== "string" ||
-    typeof params.body !== "string" ||
-    params.userId.length === 0 ||
-    params.body.length === 0
-  ) {
-  throw new BadRequestError("Invalid parameters");
-  }
 
-  const user = await validateUser(params.userId);
+  const token = getBearerToken(req);
+  const tokenedUser = validateJWT(token, config.jwt.secret);
+  
+  const user = await validateUser(tokenedUser);
 
   if(!user) {
     throw new BadRequestError("User does not exist");
@@ -31,13 +26,13 @@ export async function handlerCreateChirp(req: Request, res: Response): Promise<v
   
   const chirp = await createChirp({ 
     body: cleaned,
-    userId: params.userId
+    userId: tokenedUser
   });
   
   if (!chirp) {
     throw new Error("Could not create chirp");
   } 
-    
+
   respondWithJSON(res, 201, chirp);
 }
 

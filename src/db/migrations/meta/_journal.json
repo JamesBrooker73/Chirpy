@@ -15,6 +15,13 @@
       "when": 1764974536032,
       "tag": "0001_hard_medusa",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764978089369,
+      "tag": "0002_supreme_blue_blade",
+      "breakpoints": true
     }
   ]
 }
