@@ -35,3 +35,27 @@ export async function getUserByEmail(email: string) {
 
   return firstOrUndefined(result);
 }
+
+export async function updateUser(userID: string, email: string, passwordHash: string) {
+  const [result] = await db
+    .update(users)
+    .set({
+      email: email,
+      hashedPassword: passwordHash,
+    })
+    .where(eq(users.id, userID))
+    .returning();
+
+  return result;
+}
+
+export async function upgradeUser(userID: string) {
+  const [result] = await db
+    .update(users)
+    .set({
+      isChirpyRed: true,
+    })
+    .where(eq(users.id, userID));
+
+  return result;
+}

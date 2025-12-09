@@ -6,10 +6,11 @@ import { handlerReadiness } from "./api/readiness.js";
 import { middlewareErrorResponse, middlewareLogResponse, middlewareMetricsInc } from "./api/middleware.js";
 import { handlerFileServerHits } from "./admin/metrics.js";
 import { handlerResetFileServerHits } from "./admin/reset.js";
-import { handlerCreateChirp, handlerGetAllChirps, handlerGetChirpById } from "./api/chirps.js";
+import { handlerCreateChirp, handlerDeleteChirp, handlerGetAllChirps, handlerGetChirpById } from "./api/chirps.js";
 import { config } from "./config.js";
-import { handlerCreateUser } from "./api/users.js";
+import { handlerCreateUser, handlerUpdateUser } from "./api/users.js";
 import { handlerCheckRefreshToken, handlerCheckRevokeToken, handlerLogin } from "./api/auth.js";
+import { handlerUpgradeUser } from "./api/webhooks/polka.js";
 
 const migrationClient = postgres(config.db.url, { max: 1 });
 await migrate(drizzle(migrationClient), config.db.migrationConfig);
@@ -52,6 +53,18 @@ app.post("/api/refresh", (req, res, next) => {
 
 app.post("/api/revoke", (req, res, next) => {
   Promise.resolve(handlerCheckRevokeToken(req, res)).catch(next);
+})
+
+app.put("/api/users", (req, res, next) => {
+  Promise.resolve(handlerUpdateUser(req, res)).catch(next);
+})
+
+app.delete("/api/chirps/:chirpID", (req, res, next) => {
+  Promise.resolve(handlerDeleteChirp(req, res)).catch(next);
+})
+
+app.post("/api/polka/webhooks", (req, res, next) => {
+  Promise.resolve(handlerUpgradeUser(req, res)).catch(next);
 })
 
 app.use(middlewareErrorResponse);
